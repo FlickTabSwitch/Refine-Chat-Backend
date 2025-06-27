@@ -42,6 +42,11 @@ mongoose.connect(process.env.MONGODB_URI, {
 }).then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ MongoDB Error:', err));
 
+
+app.get("/", (req, res) => {
+  res.send("✅ Refine Chat API is alive!");
+});
+
 // ============ GOOGLE AUTH ================
 app.post('/auth/google', async (req, res) => {
   const { token, referralCode, marketerId } = req.body;
