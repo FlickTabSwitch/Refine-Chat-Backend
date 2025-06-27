@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Redirecting to Install...</title>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const marketerId = urlParams.get("marketerId");
+
+    // Save to localStorage temporarily (since chrome.runtime is not available)
+    if (marketerId) {
+      localStorage.setItem('marketerId_temp', marketerId);
+    }
+
+    // ✅ Redirect to the Chrome Web Store
+    window.location.href = "https://chrome.google.com/webstore/detail/mkgkoebefbcnangjkplkchbdngahlbhg";
+  </script>
+</head>
+<body>
+  <p>Redirecting you to install Refine AI Extension...</p>
+</body>
+</html>
