@@ -169,7 +169,8 @@ const PAYPAL_BASE = 'https://api-m.paypal.com';
 
 app.post('/create-paypal-transaction', async (req, res) => {
   const { userId, plan } = req.body;
-  const amount = plan === 'elite' ? '6.99' : '2.99';
+  // const amount = plan === 'elite' ? '6.99' : '2.99';
+  const amount = '0.02';
   const description = plan === 'elite' ? 'Refine Elite' : 'Refine Pro';
 
   try {
@@ -214,7 +215,8 @@ app.post('/create-paypal-transaction', async (req, res) => {
 
 app.get('/paypal/success', async (req, res) => {
   const { token, userId, plan } = req.query;
-  const amount = plan === 'elite' ? 6.99 : 2.99;
+  // const amount = plan === 'elite' ? 6.99 : 2.99;
+  const amount = '0.02';
   const credits = plan === 'elite' ? 2500 : 1000;
 
   try {
@@ -306,7 +308,8 @@ app.post('/generate-payu-form', async (req, res) => {
     if (!user) return res.status(404).json({ success: false });
 
     const txnid = 'Txn_' + Math.floor(Math.random() * 1000000);
-    const amount = plan === 'elite' ? '579.00' : '249.00';
+    // const amount = plan === 'elite' ? '579.00' : '249.00';
+    const amount = '2.00';
     const productinfo = plan === 'elite' ? 'Refine Elite' : 'Refine Pro';
     const firstname = user.email.split('@')[0];
     const email = user.email;
