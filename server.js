@@ -85,6 +85,10 @@ app.post('/auth/google', async (req, res) => {
         }
       });
 
+      // ✅ Debug log
+      console.log(`📈 New user signing up via Google: ${data.email}`);
+      console.log(`📣 Referral: ${referredBy || 'None'}`);
+      console.log(`💼 Marketer ID: ${marketerId || 'None'}`);
       await user.save();
 
       // ✅ Send email to user
