@@ -2,72 +2,69 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Refine AI Admin Panel</title>
   <link rel="stylesheet" href="/assets/bootstrap.min.css" />
-  <link rel="stylesheet" href="/assets/admin.css" />
 </head>
 <body class="bg-light">
   <div class="container py-5">
-    <div class="text-center mb-5">
-      <h2 class="display-5 text-primary">🛠️ Refine AI Admin Panel</h2>
+    <div class="text-center mb-4">
+      <h2 class="text-primary display-5">🛠️ Refine AI Admin Panel</h2>
     </div>
 
     <!-- 🔐 Admin Login -->
-    <div id="adminLogin" class="card p-4 mb-5">
-      <h4 class="mb-3 text-dark">Enter Admin Token</h4>
-      <input type="password" id="adminToken" class="form-control mb-3" placeholder="Enter secure token..." />
+    <div id="adminLogin" class="card shadow-sm p-4 mb-4" style="max-width: 500px; margin: auto;">
+      <h5 class="mb-3">Enter Admin Token</h5>
+      <input type="password" id="adminToken" class="form-control mb-3" placeholder="Admin token..." />
       <button id="unlockBtn" class="btn btn-primary w-100">Unlock Panel</button>
     </div>
 
     <!-- 🧠 Admin Panel -->
-    <div id="adminContent" class="d-none">
+    <div id="adminContent" style="display: none;">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="text-dark">Marketer Management</h4>
+        <button id="logoutBtn" class="btn btn-outline-danger">Logout</button>
+      </div>
+
       <!-- Add Marketer -->
-      <div class="card p-4 mb-5">
-        <h4 class="mb-4 text-dark">➕ Add New Marketer</h4>
-        <form id="marketerForm">
-          <div class="row g-3">
-            <div class="col-md-3">
-              <input type="text" class="form-control" id="name" placeholder="Full Name" required />
-            </div>
-            <div class="col-md-3">
-              <input type="email" class="form-control" id="email" placeholder="Email Address" required />
-            </div>
-            <div class="col-md-3">
-              <input type="text" class="form-control" id="referralCode" placeholder="Unique Referral Code" required />
-            </div>
-            <div class="col-md-3 d-grid">
-              <button type="submit" class="btn btn-primary">Add Marketer</button>
-            </div>
+      <div class="card p-4 mb-4">
+        <form id="marketerForm" class="row g-3">
+          <div class="col-md-3">
+            <input type="text" class="form-control" id="name" placeholder="Name" required />
+          </div>
+          <div class="col-md-3">
+            <input type="email" class="form-control" id="email" placeholder="Email" required />
+          </div>
+          <div class="col-md-3">
+            <input type="text" class="form-control" id="referralCode" placeholder="Referral Code" required />
+          </div>
+          <div class="col-md-3 d-grid">
+            <button type="submit" class="btn btn-success">Add Marketer</button>
           </div>
         </form>
       </div>
 
       <!-- Marketers List -->
-      <div class="card p-4 mb-5">
-        <h4 class="mb-4 text-dark">📋 All Marketers</h4>
-        <div class="table-responsive">
-          <table class="table table-hover table-striped align-middle">
-            <thead class="table-light">
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Referral Code</th>
-                <th>Referred Users</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="marketerTableBody">
-              <tr><td colspan="5">Loading...</td></tr>
-            </tbody>
-          </table>
-        </div>
+      <div class="card p-4">
+        <table class="table table-bordered table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Referral Code</th>
+              <th>Referred Users</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="marketerTableBody">
+            <tr><td colspan="5">Loading...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 
-  <!-- ✅ Local Scripts -->
+  <!-- JS -->
   <script src="/assets/axios.min.js"></script>
   <script src="/assets/admin.js"></script>
 </body>
