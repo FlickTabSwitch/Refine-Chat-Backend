@@ -489,7 +489,6 @@ router.delete('/admin/marketers/:id', isAdmin, async (req, res) => {
     res.status(500).json({ error: 'Failed to delete marketer' });
   }
 });
-
+app.use('/', router);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ Server running at ${BASE_URL}`));
-app.use('/', router);
