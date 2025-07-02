@@ -439,56 +439,36 @@ app.post('/refill', async (req, res) => {
 app.use((req, res) => {
   res.status(404).send('404 Not Found');
 });
-// Admin middleware
+
+// Middleware to protect admin
 function isAdmin(req, res, next) {
   const token = req.headers['x-admin-token'];
-  if (token !== 'Refineadmin9192') {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
+  if (token !== 'Refineadmin9192') return res.status(403).json({ error: 'Forbidden' });
   next();
 }
 
 // Get all marketers
 router.get('/admin/marketers', isAdmin, async (req, res) => {
-  try {
-    const marketers = await Marketer.find();
-    res.json(marketers);
-  } catch (err) {
-    console.error("Error fetching marketers:", err.message);
-    res.status(500).json({ error: 'Failed to fetch marketers' });
-  }
+  const marketers = await Marketer.find();
+  res.json(marketers);
 });
 
 // Add marketer
 router.post('/admin/marketers', isAdmin, async (req, res) => {
-  try {
-    const { name, email, referralCode, phone } = req.body;
+  const { name, email, referralCode } = req.body;
+  const exists = await Marketer.findOne({ referralCode });
+  if (exists) return res.status(400).json({ error: 'Referral code already in use' });
 
-    if (!name || !email || !referralCode || !phone) {
-      return res.status(400).json({ error: 'All fields are required' });
-    }
-
-    const cleanedCode = referralCode.trim().toLowerCase();
-    const exists = await Marketer.findOne({ referralCode: cleanedCode });
-    if (exists) return res.status(400).json({ error: 'Referral code already in use' });
-
-    const marketer = await Marketer.create({ name, email, referralCode: cleanedCode, phone });
-    res.json({ success: true, marketer });
-  } catch (err) {
-    console.error("❌ Error adding marketer:", err.message);
-    res.status(500).json({ error: 'Server error while adding marketer' });
-  }
+  const marketer = await Marketer.create({ name, email, referralCode });
+  res.json({ success: true, marketer });
 });
 
 // Delete marketer
 router.delete('/admin/marketers/:id', isAdmin, async (req, res) => {
-  try {
-    await Marketer.findByIdAndDelete(req.params.id);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to delete marketer' });
-  }
+  await Marketer.findByIdAndDelete(req.params.id);
+  res.json({ success: true });
 });
+
 app.use('/', router);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ Server running at ${BASE_URL}`));
