@@ -9,7 +9,6 @@ const fetch = require('node-fetch');
 const dayjs = require('dayjs');
 const crypto = require('crypto');
 const transporter = require('./utils/email');
-const router = express.Router();
 const Marketer = require('./models/marketer');
 
 
@@ -20,8 +19,6 @@ const { generateInvoicePDF } = require('./utils/invoice');
 const path = require('path');
 
 const app = express();
-
-app.use('/', router);
 
 app.use(helmet({
   contentSecurityPolicy: {
@@ -450,25 +447,52 @@ function isAdmin(req, res, next) {
 }
 
 // Get all marketers
-router.get('/admin/marketers', isAdmin, async (req, res) => {
-  const marketers = await Marketer.find();
-  res.json(marketers);
+// 🔒 Middleware to protect admin routes
+function isAdmin(req, res, next) {
+  const token = req.headers['x-admin-token'];
+  if (token !== 'Refineadmin9192') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  next();
+}
+
+// Admin Routes Directly on `app`
+app.get('/admin/marketers', isAdmin, async (req, res) => {
+  try {
+    const marketers = await Marketer.find();
+    res.json(marketers);
+  } catch (err) {
+    console.error("Error fetching marketers:", err.message);
+    res.status(500).json({ error: 'Failed to fetch marketers' });
+  }
 });
 
-// Add marketer
-router.post('/admin/marketers', isAdmin, async (req, res) => {
-  const { name, email, referralCode } = req.body;
-  const exists = await Marketer.findOne({ referralCode });
-  if (exists) return res.status(400).json({ error: 'Referral code already in use' });
+app.post('/admin/marketers', isAdmin, async (req, res) => {
+  const { name, email, referralCode, phone } = req.body;
 
-  const marketer = await Marketer.create({ name, email, referralCode });
-  res.json({ success: true, marketer });
+  if (!name || !email || !referralCode || !phone) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  try {
+    const exists = await Marketer.findOne({ referralCode });
+    if (exists) return res.status(400).json({ error: 'Referral code already in use' });
+
+    const marketer = await Marketer.create({ name, email, referralCode, phone });
+    res.json({ success: true, marketer });
+  } catch (err) {
+    console.error("❌ Error adding marketer:", err.message);
+    res.status(500).json({ error: 'Server error while adding marketer' });
+  }
 });
 
-// Delete marketer
-router.delete('/admin/marketers/:id', isAdmin, async (req, res) => {
-  await Marketer.findByIdAndDelete(req.params.id);
-  res.json({ success: true });
+app.delete('/admin/marketers/:id', isAdmin, async (req, res) => {
+  try {
+    await Marketer.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete marketer' });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
