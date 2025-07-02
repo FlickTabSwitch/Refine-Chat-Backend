@@ -1,18 +1,14 @@
 const mongoose = require('mongoose');
 
-const userSchema = new mongoose.Schema({
-  googleId: String,
+const marketerSchema = new mongoose.Schema({
+  name: String,
   email: String,
-  referralId: String,
-  referralCode: String,
-  trialStartDate: Date,
-  subscription: {
-    plan: String,
-    credits: Number,
-    expiresAt: Date
-  },
-  marketer: { type: mongoose.Schema.Types.ObjectId, ref: 'Marketer', default: null } // ✅ Add this
+  referralCode: { type: String, unique: true },
+  phone: String,
+  notes: String, // for admin
+  referredUsers: { type: Number, default: 0 },
+  earnings: { type: Number, default: 0 }, // optional future
+  createdAt: { type: Date, default: Date.now }
 });
-
 
 module.exports = mongoose.model('Marketer', marketerSchema);
