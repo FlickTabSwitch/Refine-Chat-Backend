@@ -436,10 +436,6 @@ app.post('/refill', async (req, res) => {
   res.json({ success: true });
 });
 
-app.use((req, res) => {
-  res.status(404).send('404 Not Found');
-});
-
 // Middleware to protect admin
 function isAdmin(req, res, next) {
   const token = req.headers['x-admin-token'];
@@ -470,5 +466,11 @@ router.delete('/admin/marketers/:id', isAdmin, async (req, res) => {
 });
 
 app.use('/', router);
+
+
+app.use((req, res) => {
+  res.status(404).send('404 Not Found');
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ Server running at ${BASE_URL}`));
