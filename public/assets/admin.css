@@ -1,0 +1,25 @@
+body {
+  background-color: #f4f6f9;
+  font-family: 'Segoe UI', sans-serif;
+}
+.container {
+  max-width: 1100px;
+}
+.card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.05);
+}
+h2, h4 {
+  font-weight: 700;
+}
+.table th {
+  background-color: #eff1f7;
+}
+.btn-primary {
+  background-color: #5c67f2;
+  border-color: #5c67f2;
+}
+.btn-primary:hover {
+  background-color: #4954d1;
+}

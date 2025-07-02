@@ -2,41 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Refine AI Admin Panel</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body {
-      background-color: #f4f6f9;
-      font-family: 'Segoe UI', sans-serif;
-    }
-    .container {
-      max-width: 1100px;
-    }
-    .card {
-      border: none;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.05);
-    }
-    h2, h4 {
-      font-weight: 700;
-    }
-    #adminContent {
-      display: none;
-    }
-    .btn-primary {
-      background-color: #5c67f2;
-      border-color: #5c67f2;
-    }
-    .btn-primary:hover {
-      background-color: #4954d1;
-    }
-    .table th {
-      background-color: #eff1f7;
-    }
-  </style>
+  <link rel="stylesheet" href="/assets/bootstrap.min.css" />
+  <link rel="stylesheet" href="/assets/admin.css" />
 </head>
-<body>
+<body class="bg-light">
   <div class="container py-5">
     <div class="text-center mb-5">
       <h2 class="display-5 text-primary">🛠️ Refine AI Admin Panel</h2>
@@ -46,11 +18,11 @@
     <div id="adminLogin" class="card p-4 mb-5">
       <h4 class="mb-3 text-dark">Enter Admin Token</h4>
       <input type="password" id="adminToken" class="form-control mb-3" placeholder="Enter secure token..." />
-      <button class="btn btn-primary w-100" onclick="verifyToken()">Unlock Panel</button>
+      <button id="unlockBtn" class="btn btn-primary w-100">Unlock Panel</button>
     </div>
 
     <!-- 🧠 Admin Panel -->
-    <div id="adminContent">
+    <div id="adminContent" style="display: none;">
       <!-- Add Marketer -->
       <div class="card p-4 mb-5">
         <h4 class="mb-4 text-dark">➕ Add New Marketer</h4>
@@ -95,91 +67,8 @@
     </div>
   </div>
 
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <script>
-    const form = document.getElementById("marketerForm");
-    const tokenInput = document.getElementById("adminToken");
-    const tableBody = document.getElementById("marketerTableBody");
-    const adminLogin = document.getElementById("adminLogin");
-    const adminContent = document.getElementById("adminContent");
-    const API = "/admin/marketers";
-
-    let savedToken = '';
-
-    function verifyToken() {
-      const token = tokenInput.value.trim();
-      if (!token) return alert("Please enter the admin token");
-      savedToken = token;
-      adminLogin.style.display = "none";
-      adminContent.style.display = "block";
-      fetchMarketers();
-    }
-
-    async function fetchMarketers() {
-      try {
-        const res = await axios.get(API, {
-          headers: { "x-admin-token": savedToken }
-        });
-
-        const marketers = res.data;
-        tableBody.innerHTML = "";
-
-        if (marketers.length === 0) {
-          tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No marketers added yet.</td></tr>`;
-          return;
-        }
-
-        marketers.forEach(m => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${m.name}</td>
-            <td>${m.email}</td>
-            <td>${m.referralCode}</td>
-            <td>${m.referredUsers || 0}</td>
-            <td>
-              <button class="btn btn-sm btn-outline-danger" onclick="deleteMarketer('${m._id}')">Delete</button>
-            </td>
-          `;
-          tableBody.appendChild(row);
-        });
-      } catch (err) {
-        tableBody.innerHTML = `<tr><td colspan="5">❌ Error: ${err.response?.data?.error || err.message}</td></tr>`;
-      }
-    }
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const data = {
-        name: document.getElementById("name").value,
-        email: document.getElementById("email").value,
-        referralCode: document.getElementById("referralCode").value
-      };
-
-      try {
-        await axios.post(API, data, {
-          headers: { "x-admin-token": savedToken }
-        });
-        form.reset();
-        fetchMarketers();
-      } catch (err) {
-        alert("❌ " + (err.response?.data?.error || err.message));
-      }
-    });
-
-    window.deleteMarketer = async function (id) {
-      if (!confirm("Are you sure you want to delete this marketer?")) return;
-
-      try {
-        await axios.delete(`${API}/${id}`, {
-          headers: { "x-admin-token": savedToken }
-        });
-        fetchMarketers();
-      } catch (err) {
-        alert("❌ " + (err.response?.data?.error || err.message));
-      }
-    };
-  </script>
+  <!-- ✅ Local Scripts -->
+  <script src="/assets/axios.min.js"></script>
+  <script src="/assets/admin.js"></script>
 </body>
 </html>
