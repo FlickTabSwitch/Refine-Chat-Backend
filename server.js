@@ -9,6 +9,7 @@ const fetch = require('node-fetch');
 const dayjs = require('dayjs');
 const crypto = require('crypto');
 const transporter = require('./utils/email');
+const router = express.Router();
 const Marketer = require('./models/marketer');
 
 
@@ -438,8 +439,7 @@ app.post('/refill', async (req, res) => {
 app.use((req, res) => {
   res.status(404).send('404 Not Found');
 });
-
-// 🔒 Middleware to protect admin routes
+// Admin middleware
 function isAdmin(req, res, next) {
   const token = req.headers['x-admin-token'];
   if (token !== 'Refineadmin9192') {
@@ -448,40 +448,31 @@ function isAdmin(req, res, next) {
   next();
 }
 
-// ✅ GET all marketers
-app.get('/admin/marketers', isAdmin, async (req, res) => {
+// Get all marketers
+router.get('/admin/marketers', isAdmin, async (req, res) => {
   try {
-    const marketers = await Marketer.find().sort({ createdAt: -1 });
+    const marketers = await Marketer.find();
     res.json(marketers);
   } catch (err) {
-    console.error("❌ Error fetching marketers:", err.message);
+    console.error("Error fetching marketers:", err.message);
     res.status(500).json({ error: 'Failed to fetch marketers' });
   }
 });
 
-// ✅ POST create new marketer
-app.post('/admin/marketers', isAdmin, async (req, res) => {
+// Add marketer
+router.post('/admin/marketers', isAdmin, async (req, res) => {
   try {
-    let { name, email, referralCode, phone } = req.body;
+    const { name, email, referralCode, phone } = req.body;
 
     if (!name || !email || !referralCode || !phone) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
-    referralCode = referralCode.trim().toLowerCase();
+    const cleanedCode = referralCode.trim().toLowerCase();
+    const exists = await Marketer.findOne({ referralCode: cleanedCode });
+    if (exists) return res.status(400).json({ error: 'Referral code already in use' });
 
-    const exists = await Marketer.findOne({ referralCode });
-    if (exists) {
-      return res.status(400).json({ error: 'Referral code already in use' });
-    }
-
-    const marketer = await Marketer.create({
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      referralCode,
-      phone: phone.trim()
-    });
-
+    const marketer = await Marketer.create({ name, email, referralCode: cleanedCode, phone });
     res.json({ success: true, marketer });
   } catch (err) {
     console.error("❌ Error adding marketer:", err.message);
@@ -489,18 +480,16 @@ app.post('/admin/marketers', isAdmin, async (req, res) => {
   }
 });
 
-// ✅ DELETE marketer by ID
-app.delete('/admin/marketers/:id', isAdmin, async (req, res) => {
+// Delete marketer
+router.delete('/admin/marketers/:id', isAdmin, async (req, res) => {
   try {
-    const result = await Marketer.findByIdAndDelete(req.params.id);
-    if (!result) return res.status(404).json({ error: 'Marketer not found' });
-
+    await Marketer.findByIdAndDelete(req.params.id);
     res.json({ success: true });
   } catch (err) {
-    console.error("❌ Error deleting marketer:", err.message);
     res.status(500).json({ error: 'Failed to delete marketer' });
   }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ Server running at ${BASE_URL}`));
+app.use('/', router);
