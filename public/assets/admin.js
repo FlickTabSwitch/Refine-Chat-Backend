@@ -5,8 +5,8 @@ document.getElementById("unlockBtn").addEventListener("click", () => {
   if (!token) return alert("Please enter admin token");
   savedToken = token;
 
-  document.getElementById("adminLogin").style.display = "none";
-  document.getElementById("adminContent").style.display = "block";
+  document.getElementById("adminLogin").classList.add("d-none");
+  document.getElementById("adminContent").classList.remove("d-none");
   fetchMarketers();
 });
 
