@@ -9,6 +9,9 @@ const fetch = require('node-fetch');
 const dayjs = require('dayjs');
 const crypto = require('crypto');
 const transporter = require('./utils/email');
+const router = express.Router();
+const Marketer = require('./models/marketer');
+
 
 const Transaction = require('./models/transaction');
 const User = require('./models/user');
@@ -17,6 +20,8 @@ const { generateInvoicePDF } = require('./utils/invoice');
 const path = require('path');
 
 const app = express();
+
+app.use('/', router);
 
 app.use(helmet({
   contentSecurityPolicy: {
@@ -49,7 +54,8 @@ app.get("/", (req, res) => {
 
 // ============ GOOGLE AUTH ================
 app.post('/auth/google', async (req, res) => {
-  const { token, referralCode, marketerId } = req.body;
+  const { token, referralCode } = req.body;
+
   try {
     const response = await fetch('https://www.googleapis.com/oauth2/v1/userinfo?alt=json', {
       headers: { Authorization: `Bearer ${token}` }
@@ -62,12 +68,24 @@ app.post('/auth/google', async (req, res) => {
 
     if (!user) {
       let referredBy = null;
-      if (referralCode) {
-        const referrer = await User.findOne({ referralCode });
-        if (referrer && referrer.googleId !== googleId) {
-          referredBy = referralCode;
-          referrer.subscription.credits += 50;
-          await referrer.save();
+      let marketerRef = null;
+
+      // 🧼 Sanitize referralCode
+      const cleanedCode = referralCode?.trim().toLowerCase();
+
+      if (cleanedCode) {
+        const marketer = await Marketer.findOne({ referralCode: cleanedCode });
+        if (marketer) {
+          marketer.referredUsers += 1;
+          await marketer.save();
+          marketerRef = marketer._id;
+        } else {
+          const referrer = await User.findOne({ referralCode: cleanedCode });
+          if (referrer && referrer.googleId !== googleId) {
+            referredBy = cleanedCode;
+            referrer.subscription.credits += 50;
+            await referrer.save();
+          }
         }
       }
 
@@ -76,8 +94,8 @@ app.post('/auth/google', async (req, res) => {
         email: data.email,
         referralId: referredBy,
         referralCode: googleId.slice(-6),
-        marketerId,
         trialStartDate: new Date(),
+        marketer: marketerRef || null,
         subscription: {
           plan: 'free',
           credits: 50,
@@ -85,13 +103,9 @@ app.post('/auth/google', async (req, res) => {
         }
       });
 
-      // ✅ Debug log
-      console.log(`📈 New user signing up via Google: ${data.email}`);
-      console.log(`📣 Referral: ${referredBy || 'None'}`);
-      console.log(`💼 Marketer ID: ${marketerId || 'None'}`);
       await user.save();
 
-      // ✅ Send email to user
+      // ✅ Send welcome email to user
       await transporter.sendMail({
         from: `"Refine AI" <${process.env.GMAIL_USER}>`,
         to: user.email,
@@ -99,7 +113,7 @@ app.post('/auth/google', async (req, res) => {
         html: `<h2>Hi ${data.name},</h2><p>You’ve successfully signed in to <strong>Refine AI</strong>.</p><p>Your current plan: <strong>Free</strong> | Credits: <strong>50</strong></p>`
       });
 
-      // ✅ Send email to admin
+      // ✅ Notify admin
       await transporter.sendMail({
         from: `"Refine AI" <${process.env.GMAIL_USER}>`,
         to: process.env.GMAIL_USER,
@@ -109,7 +123,7 @@ app.post('/auth/google', async (req, res) => {
           <ul>
             <li><strong>Name:</strong> ${data.name}</li>
             <li><strong>Email:</strong> ${data.email}</li>
-            <li><strong>Referral:</strong> ${referredBy || 'N/A'}</li>
+            <li><strong>Referral:</strong> ${referredBy || marketerRef ? 'Marketer' : 'N/A'}</li>
             <li><strong>Plan:</strong> Free (Trial)</li>
             <li><strong>Credits:</strong> 50</li>
           </ul>
@@ -424,19 +438,38 @@ app.post('/refill', async (req, res) => {
   res.json({ success: true });
 });
 
-app.get('/analytics/marketers', async (req, res) => {
-  const result = await User.aggregate([
-    { $match: { marketerId: { $ne: null } } },
-    { $group: { _id: '$marketerId', count: { $sum: 1 } } },
-    { $sort: { count: -1 } }
-  ]);
-  res.json({ success: true, data: result });
-});
-
 app.use((req, res) => {
   res.status(404).send('404 Not Found');
 });
 
+// Middleware to protect admin
+function isAdmin(req, res, next) {
+  const token = req.headers['x-admin-token'];
+  if (token !== 'Refineadmin9192') return res.status(403).json({ error: 'Forbidden' });
+  next();
+}
+
+// Get all marketers
+router.get('/admin/marketers', isAdmin, async (req, res) => {
+  const marketers = await Marketer.find();
+  res.json(marketers);
+});
+
+// Add marketer
+router.post('/admin/marketers', isAdmin, async (req, res) => {
+  const { name, email, referralCode } = req.body;
+  const exists = await Marketer.findOne({ referralCode });
+  if (exists) return res.status(400).json({ error: 'Referral code already in use' });
+
+  const marketer = await Marketer.create({ name, email, referralCode });
+  res.json({ success: true, marketer });
+});
+
+// Delete marketer
+router.delete('/admin/marketers/:id', isAdmin, async (req, res) => {
+  await Marketer.findByIdAndDelete(req.params.id);
+  res.json({ success: true });
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ Server running at ${BASE_URL}`));

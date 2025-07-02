@@ -5,7 +5,6 @@ const userSchema = new mongoose.Schema({
   email: String,
   referralId: String,         // The referrer's code this user used
   referralCode: String,       // This user's own referral code
-  marketerId: { type: String, default: null },
   messageCount: { type: Number, default: 0 },
   trialStartDate: { type: Date, default: Date.now },
 
