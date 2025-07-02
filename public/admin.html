@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Refine AI Admin Panel</title>
   <link rel="stylesheet" href="/assets/bootstrap.min.css" />
+  <link rel="stylesheet" href="/assets/admin.css" />
 </head>
 <body class="bg-light">
   <div class="container py-5">
@@ -38,7 +39,10 @@
           <div class="col-md-3">
             <input type="text" class="form-control" id="referralCode" placeholder="Referral Code" required />
           </div>
-          <div class="col-md-3 d-grid">
+          <div class="col-md-3">
+            <input type="text" class="form-control" id="phone" placeholder="Phone Number" />
+          </div>
+          <div class="col-md-12 d-grid">
             <button type="submit" class="btn btn-success">Add Marketer</button>
           </div>
         </form>
@@ -52,12 +56,13 @@
               <th>Name</th>
               <th>Email</th>
               <th>Referral Code</th>
+              <th>Phone</th>
               <th>Referred Users</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody id="marketerTableBody">
-            <tr><td colspan="5">Loading...</td></tr>
+            <tr><td colspan="6">Loading...</td></tr>
           </tbody>
         </table>
       </div>

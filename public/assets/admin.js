@@ -1,14 +1,13 @@
 let savedToken = localStorage.getItem("admin-token") || "";
 
-// DOM refs
 const loginBox = document.getElementById("adminLogin");
 const adminPanel = document.getElementById("adminContent");
 const unlockBtn = document.getElementById("unlockBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const marketerForm = document.getElementById("marketerForm");
 const tableBody = document.getElementById("marketerTableBody");
+const tokenInput = document.getElementById("adminToken");
 
-// Show login if no token
 if (!savedToken) {
   loginBox.style.display = "block";
   adminPanel.style.display = "none";
@@ -16,9 +15,9 @@ if (!savedToken) {
   verifyTokenAndFetch();
 }
 
-// 🔓 Handle login
+// 🔓 Unlock panel
 unlockBtn.addEventListener("click", async () => {
-  const input = document.getElementById("adminToken").value.trim();
+  const input = tokenInput.value.trim();
   if (!input) return alert("Please enter admin token");
 
   savedToken = input;
@@ -30,11 +29,12 @@ unlockBtn.addEventListener("click", async () => {
 logoutBtn.addEventListener("click", () => {
   localStorage.removeItem("admin-token");
   savedToken = "";
+  tokenInput.value = ""; // clear token field
   loginBox.style.display = "block";
   adminPanel.style.display = "none";
 });
 
-// ✅ Verify token by trying to fetch marketers
+// ✅ Validate token
 async function verifyTokenAndFetch() {
   try {
     await fetchMarketers();
@@ -44,6 +44,7 @@ async function verifyTokenAndFetch() {
     alert("Invalid token. Try again.");
     localStorage.removeItem("admin-token");
     savedToken = "";
+    tokenInput.value = "";
     loginBox.style.display = "block";
     adminPanel.style.display = "none";
   }
@@ -55,11 +56,12 @@ marketerForm.addEventListener("submit", async (e) => {
   const name = document.getElementById("name").value.trim();
   const email = document.getElementById("email").value.trim();
   const referralCode = document.getElementById("referralCode").value.trim();
+  const phone = document.getElementById("phone").value.trim();
 
   if (!name || !email || !referralCode) return alert("All fields are required.");
 
   try {
-    await axios.post("/admin/marketers", { name, email, referralCode }, {
+    await axios.post("/admin/marketers", { name, email, referralCode, phone }, {
       headers: { "x-admin-token": savedToken }
     });
     e.target.reset();
@@ -79,7 +81,7 @@ async function fetchMarketers() {
   tableBody.innerHTML = "";
 
   if (marketers.length === 0) {
-    tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No marketers yet.</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No marketers yet.</td></tr>`;
     return;
   }
 
@@ -89,6 +91,7 @@ async function fetchMarketers() {
       <td>${m.name}</td>
       <td>${m.email}</td>
       <td>${m.referralCode}</td>
+      <td>${m.phone || "-"}</td>
       <td>${m.referredUsers || 0}</td>
       <td>
         <button class="btn btn-sm btn-outline-danger" data-id="${m._id}">🗑️ Delete</button>
@@ -97,7 +100,6 @@ async function fetchMarketers() {
     tableBody.appendChild(row);
   });
 
-  // 🗑️ Delete handlers
   document.querySelectorAll("[data-id]").forEach(btn => {
     btn.addEventListener("click", async () => {
       if (!confirm("Delete this marketer?")) return;

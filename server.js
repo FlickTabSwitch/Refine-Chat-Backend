@@ -445,7 +445,7 @@ app.use((req, res) => {
 // Middleware to protect admin
 function isAdmin(req, res, next) {
   const token = req.headers['x-admin-token'];
-  if (token !== 'Refineadmi n9192') return res.status(403).json({ error: 'Forbidden' });
+  if (token !== 'Refineadmin9192') return res.status(403).json({ error: 'Forbidden' });
   next();
 }
 
