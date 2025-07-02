@@ -439,7 +439,6 @@ app.use((req, res) => {
   res.status(404).send('404 Not Found');
 });
 
-// Get all marketers
 // 🔒 Middleware to protect admin routes
 function isAdmin(req, res, next) {
   const token = req.headers['x-admin-token'];
@@ -449,30 +448,40 @@ function isAdmin(req, res, next) {
   next();
 }
 
-// Admin Routes Directly on `app`
+// ✅ GET all marketers
 app.get('/admin/marketers', isAdmin, async (req, res) => {
   try {
-    const marketers = await Marketer.find();
+    const marketers = await Marketer.find().sort({ createdAt: -1 });
     res.json(marketers);
   } catch (err) {
-    console.error("Error fetching marketers:", err.message);
+    console.error("❌ Error fetching marketers:", err.message);
     res.status(500).json({ error: 'Failed to fetch marketers' });
   }
 });
 
+// ✅ POST create new marketer
 app.post('/admin/marketers', isAdmin, async (req, res) => {
-  const { name, email, referralCode, phone } = req.body;
-
-  if (!name || !email || !referralCode || !phone) {
-    return res.status(400).json({ error: 'All fields are required' });
-  }
-
   try {
-    const cleanedCode = referralCode.trim().toLowerCase();
-    const exists = await Marketer.findOne({ referralCode: cleanedCode });
-    if (exists) return res.status(400).json({ error: 'Referral code already in use' });
+    let { name, email, referralCode, phone } = req.body;
 
-    const marketer = await Marketer.create({ name, email, referralCode: cleanedCode, phone });
+    if (!name || !email || !referralCode || !phone) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    referralCode = referralCode.trim().toLowerCase();
+
+    const exists = await Marketer.findOne({ referralCode });
+    if (exists) {
+      return res.status(400).json({ error: 'Referral code already in use' });
+    }
+
+    const marketer = await Marketer.create({
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      referralCode,
+      phone: phone.trim()
+    });
+
     res.json({ success: true, marketer });
   } catch (err) {
     console.error("❌ Error adding marketer:", err.message);
@@ -480,11 +489,15 @@ app.post('/admin/marketers', isAdmin, async (req, res) => {
   }
 });
 
+// ✅ DELETE marketer by ID
 app.delete('/admin/marketers/:id', isAdmin, async (req, res) => {
   try {
-    await Marketer.findByIdAndDelete(req.params.id);
+    const result = await Marketer.findByIdAndDelete(req.params.id);
+    if (!result) return res.status(404).json({ error: 'Marketer not found' });
+
     res.json({ success: true });
   } catch (err) {
+    console.error("❌ Error deleting marketer:", err.message);
     res.status(500).json({ error: 'Failed to delete marketer' });
   }
 });
