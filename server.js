@@ -439,13 +439,6 @@ app.use((req, res) => {
   res.status(404).send('404 Not Found');
 });
 
-// Middleware to protect admin
-function isAdmin(req, res, next) {
-  const token = req.headers['x-admin-token'];
-  if (token !== 'Refineadmin9192') return res.status(403).json({ error: 'Forbidden' });
-  next();
-}
-
 // Get all marketers
 // 🔒 Middleware to protect admin routes
 function isAdmin(req, res, next) {
@@ -475,10 +468,11 @@ app.post('/admin/marketers', isAdmin, async (req, res) => {
   }
 
   try {
-    const exists = await Marketer.findOne({ referralCode });
+    const cleanedCode = referralCode.trim().toLowerCase();
+    const exists = await Marketer.findOne({ referralCode: cleanedCode });
     if (exists) return res.status(400).json({ error: 'Referral code already in use' });
 
-    const marketer = await Marketer.create({ name, email, referralCode, phone });
+    const marketer = await Marketer.create({ name, email, referralCode: cleanedCode, phone });
     res.json({ success: true, marketer });
   } catch (err) {
     console.error("❌ Error adding marketer:", err.message);
